@@ -1,31 +1,39 @@
 # PocketBridge
 
-PocketBridge는 iPhone의 사진, 동영상, 문서를 Windows PC로 보내는 네이티브 수신 앱입니다. iPhone에서는 별도 앱 대신 **단축어 공유 시트**를 사용하므로 Mac, Xcode, Apple Developer 유료 계정이 필요 없습니다. 두 기기가 같은 Wi-Fi에 있을 필요도 없습니다.
+PocketBridge는 iPhone에서 Windows로 사진, 동영상, 문서를 보내기 위한 파일 전송 프로젝트입니다. 같은 Wi-Fi가 필요 없습니다. 복잡한 서버 주소나 긴 공유 링크 대신 **6자리 PIN 방**으로 연결하는 경험을 목표로 합니다.
 
-Windows 앱에서 QR을 만들고, iPhone에서 파일을 선택해 **공유 → PocketBridge → QR 스캔**을 누르면 전송됩니다.
+```text
+Windows에서 방 만들기 → 6자리 PIN 표시 → iPhone에서 PIN 입력 → 파일 업로드 → Windows의 파일 목록에서 받기
+```
 
-## 제공 기능
+## 현재 방향
 
-- Windows 10/11 네이티브 WPF 수신 앱
-- iPhone 단축어의 사진·동영상·파일 공유 시트 입력
-- HTTPS/WSS 스트리밍: 전체 파일을 메모리에 올리지 않음
-- SHA-256 원본 해시와 원본 크기 검증, 임시 파일의 원자적 저장, 기존 파일 덮어쓰기 방지
-- 문서용 단일 파일 ZIP 압축 레시피와 압축 후 원본 복원
-- 한 번만 쓸 수 있는 QR 토큰과 10분 연결 만료
+PocketBridge는 각 전송을 독립된 방으로 처리합니다.
 
-## 먼저 알아둘 점
+- 서버가 `482731` 같은 6자리 PIN과 방을 생성합니다.
+- iPhone은 PocketBridge 업로드 페이지에서 PIN으로 방에 들어가 파일을 보냅니다.
+- 파일은 방별 목록으로 저장됩니다.
+- 방과 파일은 생성 후 24시간이 지나면 삭제됩니다.
+- Windows 앱은 방의 파일 목록을 표시하고 다운로드하는 수신 프로그램이 됩니다.
 
-- 다른 네트워크에서 보내려면 두 기기가 접근할 **HTTPS 중계 서버**가 필요합니다. 이 저장소는 공개 릴레이를 제공하지 않습니다.
-- 단축어 버전은 iOS 기본 동작만 사용하므로 파일 내용은 HTTPS로 전송되고 릴레이를 경유합니다. **종단간 암호화가 아닙니다.** 신뢰하는 서버를 운영하고 HTTPS를 사용하세요. Windows는 도착한 파일의 SHA-256과 크기를 검증합니다.
-- iOS는 사용자가 공유 시트에서 선택한 항목만 단축어에 전달합니다. iPhone 전체 저장소나 다른 앱의 비공개 영역을 자동으로 탐색할 수 없습니다.
+이 방식에서는 사용자가 릴레이 URL을 직접 입력하지 않습니다. 서로 다른 네트워크를 연결하려면 PocketBridge 내부의 공개 서비스가 필요하며, 이 저장소는 Cloudflare Worker, D1, R2를 이용해 그 서비스를 구성합니다.
 
-## 사용하기
+## 프로젝트 상태
 
-1. [Windows 앱](#windows-앱-빌드)을 실행하고, 중계 서버 HTTPS 주소와 저장 폴더를 지정합니다.
-2. **연결 QR 만들기**를 누릅니다.
-3. iPhone에서 [PocketBridge 단축어](docs/shortcut.md)를 한 번 만듭니다.
-4. 사진 앱 또는 파일 앱에서 보낼 항목을 선택하고 **공유 → PocketBridge**를 누릅니다.
-5. 단축어가 Windows QR을 스캔하면 업로드가 끝날 때까지 iPhone을 잠금 해제 상태로 둡니다.
+PIN 방 서버와 iPhone 업로드 페이지는 `cloudflare/pocketbridge-worker`에 구현되어 있습니다. Windows 앱의 기존 QR/릴레이 전송 화면은 PIN 방 목록 수신 화면으로 전환 중입니다. 따라서 현재 커밋은 서버 구조와 기존 Windows 수신기를 함께 포함한 개발 버전입니다.
+
+## Cloudflare 배포
+
+무료 Cloudflare 계정이 필요합니다. 대시보드에서 **R2 Object Storage**를 먼저 활성화한 뒤 실행하세요.
+
+```powershell
+npx wrangler login
+cd cloudflare/pocketbridge-worker
+npx wrangler d1 execute pocketbridge-rooms --remote --file schema.sql
+npx wrangler deploy
+```
+
+배포가 끝나면 Wrangler가 `https://<이름>.<계정>.workers.dev` 주소를 표시합니다. 이 주소가 PocketBridge의 고정 서비스 주소가 됩니다.
 
 ## Windows 앱 빌드
 
@@ -36,44 +44,22 @@ dotnet build PocketBridge.slnx -c Release
 dotnet run --project src/PocketBridge.Windows -c Release
 ```
 
-배포용 단일 파일은 다음과 같이 만듭니다.
+배포용 Windows 실행 파일:
 
 ```powershell
 pwsh ./scripts/publish-windows.ps1
 ```
 
-## 중계 서버 실행
-
-개발용 로컬 실행:
-
-```powershell
-dotnet run --project src/PocketBridge.Relay --urls http://127.0.0.1:5057
-```
-
-실제 iPhone 전송에는 공개 HTTPS 주소와 WebSocket 프록시 설정이 필요합니다. [중계 서버 안내](docs/relay.md)를 따르세요.
-
-## 개발·검증
-
-```powershell
-dotnet build PocketBridge.slnx -c Release
-dotnet run --project tests/PocketBridge.Tests -c Release
-dotnet run --project tests/RelaySmoke -c Release
-```
-
-릴레이를 실행한 상태에서는 다음 통합 검사가 추가됩니다.
-
-```powershell
-dotnet run --project tests/PocketBridge.Tests -c Release -- --relay http://127.0.0.1:5057
-```
-
 ## 저장소 구성
 
+- `cloudflare/pocketbridge-worker`: PIN 방, 업로드 페이지, D1 방 목록, R2 파일 저장
 - `src/PocketBridge.Windows`: Windows 수신 앱
-- `src/PocketBridge.Relay`: HTTPS/WSS 중계 서버
-- `src/PocketBridge.Core`: 검증, 안전한 저장, 수신 프로토콜
-- `docs/shortcut.md`: iPhone 단축어 만들기
-- `docs/relay.md`: 서버 배포와 보안 경계
-- `tests`: 단위·통합·릴레이 스모크 검사
-- `cloudflare/pocketbridge-worker`: PIN 방·파일 목록용 Cloudflare Worker와 R2 저장소 구성
+- `src/PocketBridge.Core`: 파일 검증과 안전한 저장 로직
+- `src/PocketBridge.Relay`: 기존 릴레이 전송 프로토콜
+- `tests`: 기존 수신·릴레이 검사
+
+## 보안과 보관
+
+PIN은 방을 찾는 번호이며 비밀번호가 아닙니다. 실제 공개 서비스에서는 PIN 외에 방 접근 토큰, 업로드 크기 제한, 다운로드 권한, 악성 파일 대응, R2 수명 주기 규칙을 추가해야 합니다. 파일은 Cloudflare R2에 저장되므로 이 구조는 종단간 암호화가 아닙니다.
 
 기여 방법은 [CONTRIBUTING.md](CONTRIBUTING.md), 보안 보고는 [SECURITY.md](SECURITY.md)를 참고하세요.
