@@ -3,6 +3,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /source
 COPY Directory.Build.props ./
+COPY src/PocketBridge.Core/ src/PocketBridge.Core/
 COPY src/PocketBridge.Relay/ src/PocketBridge.Relay/
 RUN dotnet publish src/PocketBridge.Relay/PocketBridge.Relay.csproj -c Release -o /app --nologo
 

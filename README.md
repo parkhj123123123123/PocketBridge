@@ -1,86 +1,58 @@
 # PocketBridge
 
-PocketBridge는 iPhone에서 Windows PC로 사진, 동영상, 문서를 보내는 네이티브 전송 앱입니다. 두 기기가 같은 Wi-Fi에 있을 필요가 없습니다. Windows 앱이 보여 주는 QR을 iPhone 앱으로 스캔하고 파일을 고른 뒤 전송합니다.
+PocketBridge는 iPhone의 사진, 동영상, 문서를 Windows PC로 보내는 네이티브 수신 앱입니다. iPhone에서는 별도 앱 대신 **단축어 공유 시트**를 사용하므로 Mac, Xcode, Apple Developer 유료 계정이 필요 없습니다. 두 기기가 같은 Wi-Fi에 있을 필요도 없습니다.
 
-![PocketBridge Windows 수신 앱](docs/images/windows-app.png)
+Windows 앱에서 QR을 만들고, iPhone에서 파일을 선택해 **공유 → PocketBridge → QR 스캔**을 누르면 전송됩니다.
 
-> 현재 상태: GitHub에서 직접 빌드하고 배포할 수 있는 첫 공개 개발 버전입니다. Windows 수신 앱과 중계 서버는 이 저장소에서 빌드·통합 테스트했습니다. iOS 앱은 소스와 XcodeGen 프로젝트를 제공하지만 Windows 개발 환경의 한계로 실제 iPhone 빌드와 실기기 전송은 아직 검증하지 못했습니다.
+## 제공 기능
 
-## 동작 방식
+- Windows 10/11 네이티브 WPF 수신 앱
+- iPhone 단축어의 사진·동영상·파일 공유 시트 입력
+- HTTPS/WSS 스트리밍: 전체 파일을 메모리에 올리지 않음
+- SHA-256 원본 해시와 원본 크기 검증, 임시 파일의 원자적 저장, 기존 파일 덮어쓰기 방지
+- 문서용 단일 파일 ZIP 압축 레시피와 압축 후 원본 복원
+- 한 번만 쓸 수 있는 QR 토큰과 10분 연결 만료
 
-```mermaid
-sequenceDiagram
-    participant W as Windows 앱
-    participant R as 암호화 중계 서버
-    participant I as iPhone 앱
-    W->>R: 일회용 연결 생성
-    W-->>I: QR: 서버·방·전송 키
-    I->>R: 일회용 토큰으로 연결
-    I->>I: 문서가 작아질 때만 ZIP 압축
-    I->>R: AES-256-GCM 암호문 스트리밍
-    R->>W: 암호문을 메모리에서 전달
-    W->>W: 크기·SHA-256 검증 후 저장
-    W-->>I: 검증 완료 확인
-```
+## 먼저 알아둘 점
 
-- 사용자 화면은 Windows WPF와 iOS SwiftUI로 만든 네이티브 앱입니다. 중계 서버는 화면을 제공하지 않습니다.
-- 파일명과 파일 데이터는 Windows 앱이 만든 256비트 키로 종단간 암호화됩니다. 키는 QR에만 들어가며 중계 서버로 보내지 않습니다.
-- 큰 파일을 256 KiB 단위로 읽어 전송하므로 파일 전체를 메모리에 올리지 않습니다.
-- 텍스트 계열 문서는 ZIP으로 압축했을 때 5% 이상 작아지는 경우에만 압축본을 전송합니다. 이미 압축된 사진, 동영상, PDF, Office 문서는 원본 그대로 보냅니다.
-- Windows는 수신 파일의 원본 크기와 SHA-256을 검증한 뒤 저장합니다. 기존 파일을 덮어쓰거나 iPhone 원본을 삭제하지 않습니다.
+- 다른 네트워크에서 보내려면 두 기기가 접근할 **HTTPS 중계 서버**가 필요합니다. 이 저장소는 공개 릴레이를 제공하지 않습니다.
+- 단축어 버전은 iOS 기본 동작만 사용하므로 파일 내용은 HTTPS로 전송되고 릴레이를 경유합니다. **종단간 암호화가 아닙니다.** 신뢰하는 서버를 운영하고 HTTPS를 사용하세요. Windows는 도착한 파일의 SHA-256과 크기를 검증합니다.
+- iOS는 사용자가 공유 시트에서 선택한 항목만 단축어에 전달합니다. iPhone 전체 저장소나 다른 앱의 비공개 영역을 자동으로 탐색할 수 없습니다.
 
-## 저장소 구성
+## 사용하기
 
-- `src/PocketBridge.Windows`: Windows 10/11 수신 앱 (.NET 10 WPF)
-- `ios/PocketBridge`: iPhone 송신 앱 (SwiftUI, iOS 17 이상)
-- `src/PocketBridge.Relay`: 서로 다른 네트워크를 이어 주는 ASP.NET Core WebSocket 중계 서버
-- `src/PocketBridge.Core`: 암호화, 검증, 안전한 파일 저장 로직
-- `tests`: 실제 WebSocket 중계와 파일 무결성 검사
+1. [Windows 앱](#windows-앱-빌드)을 실행하고, 중계 서버 HTTPS 주소와 저장 폴더를 지정합니다.
+2. **연결 QR 만들기**를 누릅니다.
+3. iPhone에서 [PocketBridge 단축어](docs/shortcut.md)를 한 번 만듭니다.
+4. 사진 앱 또는 파일 앱에서 보낼 항목을 선택하고 **공유 → PocketBridge**를 누릅니다.
+5. 단축어가 Windows QR을 스캔하면 업로드가 끝날 때까지 iPhone을 잠금 해제 상태로 둡니다.
 
-## 바로 시작하기
+## Windows 앱 빌드
 
-### 1. 중계 서버 준비
-
-서로 다른 네트워크에서 사용하려면 공개 HTTPS 주소가 필요합니다. 저장소에는 운영 중인 공용 서버가 포함되지 않습니다. 서버 한 대에 Docker 컨테이너를 실행하고 Nginx나 호스팅 서비스에서 HTTPS와 WebSocket을 연결하세요.
-
-```bash
-docker build -f src/PocketBridge.Relay/Dockerfile -t pocketbridge-relay .
-docker run -d --restart unless-stopped -p 127.0.0.1:8080:8080 pocketbridge-relay
-```
-
-자세한 보안 설정과 Nginx 예시는 [중계 서버 배포 안내](docs/relay.md)를 참고하세요.
-
-### 2. Windows 앱 실행
-
-.NET 10 SDK가 설치된 Windows에서:
+Windows와 [.NET SDK 10](https://dotnet.microsoft.com/download)이 필요합니다.
 
 ```powershell
+dotnet build PocketBridge.slnx -c Release
 dotnet run --project src/PocketBridge.Windows -c Release
 ```
 
-앱에 `https://relay.example.com` 형태의 중계 서버 주소와 저장 폴더를 입력하고 **연결 만들기**를 누릅니다. 배포용 단일 폴더는 다음 명령으로 만듭니다.
+배포용 단일 파일은 다음과 같이 만듭니다.
 
 ```powershell
-./scripts/publish-windows.ps1
+pwsh ./scripts/publish-windows.ps1
 ```
 
-공개 Release에 올리는 Windows 실행 파일은 코드 서명을 추가하기 전까지 Windows SmartScreen 경고가 표시될 수 있습니다. 사용자가 신뢰할 수 있는 배포를 하려면 릴리스 파이프라인에 본인의 Windows 코드 서명 인증서를 연결하세요.
+## 중계 서버 실행
 
-### 3. iPhone 앱 빌드
+개발용 로컬 실행:
 
-macOS, Xcode, [XcodeGen](https://github.com/yonaskolb/XcodeGen)이 필요합니다.
-
-```bash
-cd ios
-xcodegen generate
-open PocketBridge.xcodeproj
+```powershell
+dotnet run --project src/PocketBridge.Relay --urls http://127.0.0.1:5057
 ```
 
-Apple Developer Team과 앱 식별자를 자신의 값으로 설정하고 iPhone에 설치합니다. 자세한 절차는 [iPhone 앱 빌드 안내](docs/ios.md)를 참고하세요.
+실제 iPhone 전송에는 공개 HTTPS 주소와 WebSocket 프록시 설정이 필요합니다. [중계 서버 안내](docs/relay.md)를 따르세요.
 
-## 개발과 검증
-
-필요 도구는 .NET 10 SDK입니다.
+## 개발·검증
 
 ```powershell
 dotnet build PocketBridge.slnx -c Release
@@ -88,16 +60,19 @@ dotnet run --project tests/PocketBridge.Tests -c Release
 dotnet run --project tests/RelaySmoke -c Release
 ```
 
-`PocketBridge.Tests`는 암호문 변조, 잘못된 키, 경로 조작, ZIP 확장 제한, 중복 파일명, 중단된 전송 정리를 검사합니다. `RelaySmoke`는 로컬 중계 서버를 직접 시작해 토큰 인증, 양방향 전송, 메시지 크기 제한과 연결 정리를 검사합니다.
+릴레이를 실행한 상태에서는 다음 통합 검사가 추가됩니다.
 
-## 지원 범위
+```powershell
+dotnet run --project tests/PocketBridge.Tests -c Release -- --relay http://127.0.0.1:5057
+```
 
-iOS의 파일 선택기나 사진 선택기에서 사용자가 명시적으로 고른 파일을 전송합니다. iOS 보안 정책상 다른 앱의 비공개 저장소나 iPhone 전체 파일 시스템을 탐색할 수 없습니다. iCloud에만 있고 기기에 내려받지 않은 항목은 선택 과정에서 iOS가 먼저 내려받아야 하므로 시간이 더 걸리거나 네트워크 상태에 따라 실패할 수 있습니다.
+## 저장소 구성
 
-현재 버전은 한 번에 한 iPhone과 연결하며 파일을 순서대로 전송합니다. 연결이 끊기면 미완료 파일을 버리고 새 QR로 다시 연결합니다. 폴더 구조, Photos 앨범 구조, Live Photo의 편집 정보, 중단 지점 이어받기는 아직 지원하지 않습니다.
+- `src/PocketBridge.Windows`: Windows 수신 앱
+- `src/PocketBridge.Relay`: HTTPS/WSS 중계 서버
+- `src/PocketBridge.Core`: 검증, 안전한 저장, 수신 프로토콜
+- `docs/shortcut.md`: iPhone 단축어 만들기
+- `docs/relay.md`: 서버 배포와 보안 경계
+- `tests`: 단위·통합·릴레이 스모크 검사
 
-## 보안 제보와 라이선스
-
-민감한 취약점은 공개 Issue 대신 저장소의 GitHub Security Advisory로 제보해 주세요. 일반 버그는 환경, 재현 순서, 로그에서 토큰과 QR 내용을 제거한 뒤 Issue로 등록하면 됩니다.
-
-MIT License로 배포합니다. 자세한 내용은 [LICENSE](LICENSE)를 확인하세요.
+기여 방법은 [CONTRIBUTING.md](CONTRIBUTING.md), 보안 보고는 [SECURITY.md](SECURITY.md)를 참고하세요.

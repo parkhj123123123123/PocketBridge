@@ -19,10 +19,10 @@ internal sealed class HelpWindow : Window
         FontFamily = new FontFamily("Segoe UI, Malgun Gothic");
         var stack = new StackPanel { Margin = new Thickness(30) };
         stack.Children.Add(Label("처음 연결하기", 26, FontWeights.Bold));
-        stack.Children.Add(Label("앱 두 개와 HTTPS 중계 서버가 필요해요.", 13, FontWeights.Normal, "#6D788C", new Thickness(0, 10, 0, 22)));
+        stack.Children.Add(Label("Windows 앱, iPhone 단축어와 HTTPS 중계 서버가 필요해요.", 13, FontWeights.Normal, "#6D788C", new Thickness(0, 10, 0, 22)));
         AddStep(stack, "1", "중계 서버 준비", "이 프로젝트에는 공개 중계 서비스가 포함되어 있지 않습니다. 운영자가 서버를 배포한 뒤 HTTPS 주소를 제공해야 합니다. 서로 다른 Wi-Fi나 iPhone 셀룰러에서도 인터넷으로 연결됩니다.", "docs/relay.md 열기", "relay.md");
-        AddStep(stack, "2", "iPhone 앱 설치", "iPhone용 소스는 함께 제공됩니다. 현재 App Store 배포본은 없으며, Mac과 Xcode에서 앱을 빌드하고 iPhone에 설치해야 합니다.", "docs/ios.md 열기", "ios.md");
-        AddStep(stack, "3", "QR로 연결하고 전송", "Windows에서 서버 주소와 저장 폴더를 지정하고 QR을 만드세요. iPhone 앱에서 스캔한 뒤 서버 주소를 확인하고 연결을 누르세요. 사진·동영상 또는 파일 앱에서 항목을 선택해 전송합니다.");
+        AddStep(stack, "2", "iPhone 단축어 만들기", "iPhone의 단축어 앱에서 제공된 PocketBridge 레시피를 한 번만 만드세요. Mac, Xcode, 유료 개발자 계정이 필요 없습니다.", "docs/shortcut.md 열기", "shortcut.md");
+        AddStep(stack, "3", "공유 시트에서 전송", "Windows에서 서버 주소와 저장 폴더를 지정하고 QR을 만드세요. 사진 또는 파일을 선택해 공유 → PocketBridge 단축어 → QR 스캔 순서로 보냅니다.");
         stack.Children.Add(Label("연결이 끊기면 새 QR로 연결하고 미완료 파일을 다시 보내세요.\n다른 앱의 비공개 파일은 iOS에서 선택·공유할 수 있어야 합니다.", 11, FontWeights.Normal, "#6D788C", new Thickness(0, 5, 0, 15)));
         var close = new Button { Content = "알겠어요", HorizontalAlignment = HorizontalAlignment.Right, MinWidth = 100, IsDefault = true, Style = (Style)Application.Current.FindResource("PrimaryButton") };
         close.Click += (_, _) => Close();

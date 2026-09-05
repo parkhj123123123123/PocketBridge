@@ -1,6 +1,6 @@
 # Contributing
 
-Open an issue before a large protocol or architecture change. Keep transfer protocol changes backward-compatible or increment the protocol version in both native apps and the relay documentation.
+Open an issue before a large protocol or architecture change. Keep transfer protocol changes backward-compatible or increment the protocol version in the Windows receiver, relay, Shortcut recipe, and documentation.
 
 Before a pull request, run:
 
@@ -10,4 +10,4 @@ dotnet run --project tests/PocketBridge.Tests -c Release
 dotnet run --project tests/RelaySmoke -c Release
 ```
 
-iOS changes should also build on the current stable Xcode with the deployment target declared in `ios/project.yml`. Never commit signing assets, provisioning profiles, production relay credentials, QR contents, or captured user files.
+Never commit production relay credentials, QR contents, bearer tokens, or captured user files. If you change the Shortcut request headers or recipe, update `docs/shortcut.md` and add an integration test.

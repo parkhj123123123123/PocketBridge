@@ -19,7 +19,7 @@ public partial class MainWindow : Window
     private readonly CancellationTokenSource _lifetime = new();
     private readonly bool _preview;
     private readonly string _settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PocketBridge", "settings.json");
-    private ReceiverClient? _client;
+    private ShortcutReceiverClient? _client;
     private string _destination;
     private bool _busy;
     private bool _closing;
@@ -99,7 +99,7 @@ public partial class MainWindow : Window
         {
             await DisposeClientAsync();
             Directory.CreateDirectory(_destination);
-            var client = new ReceiverClient(RelayUrlBox.Text.Trim(), _destination);
+            var client = new ShortcutReceiverClient(RelayUrlBox.Text.Trim(), _destination);
             _client = client;
             client.Updated += update => DispatchFor(client, () => ApplyUpdate(update));
             client.FileReceived += file => DispatchFor(client, () => AddReceipt(file));
@@ -119,7 +119,7 @@ public partial class MainWindow : Window
                 image.EndInit();
                 image.Freeze();
                 QrImage.Source = image;
-                QrCaption.Text = $"{new Uri(invite.Server).Authority} · 10분 내 스캔\niPhone의 PocketBridge 앱에서 연결하세요.";
+                QrCaption.Text = $"{new Uri(invite.Server).Authority} · 10분 내 스캔\n단축어에서 QR을 스캔하세요.";
                 QrPlaceholder.Visibility = Visibility.Collapsed;
                 QrPanel.Visibility = Visibility.Visible;
                 CopyInviteButton.IsEnabled = true;
@@ -154,7 +154,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void DispatchFor(ReceiverClient client, Action action)
+    private void DispatchFor(ShortcutReceiverClient client, Action action)
     {
         if (Dispatcher.HasShutdownStarted || _closing) return;
         Dispatcher.BeginInvoke(() =>
@@ -309,7 +309,7 @@ public partial class MainWindow : Window
         {
             if (_client?.Invite is not { } invite) return;
             Clipboard.SetText(invite.ToJson());
-            ConnectionMessage.Text = "연결 정보를 복사했습니다. iPhone 앱의 ‘연결 정보 붙여넣기’에 넣으세요. 연결 정보는 다른 사람에게 공유하지 마세요.";
+            ConnectionMessage.Text = "연결 정보를 복사했습니다. 단축어에서 QR 대신 이 정보를 입력할 수 있습니다. 연결 정보는 다른 사람에게 공유하지 마세요.";
         }
         catch (Exception ex) { MessageBox.Show(this, "클립보드를 사용할 수 없습니다. QR로 연결하거나 잠시 후 다시 시도하세요.\n\n" + ex.Message, "PocketBridge", MessageBoxButton.OK, MessageBoxImage.Information); }
     }

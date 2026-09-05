@@ -318,6 +318,50 @@ try
             Equal(3, Directory.GetFileSystemEntries(folder).Length);
             Equal(false, File.Exists(Path.Combine(folder, "interrupted.bin")));
         });
+
+        string shortcutFolder = Folder();
+        await using var shortcutReceiver = new ShortcutReceiverClient(server, shortcutFolder);
+        await shortcutReceiver.StartAsync(ct);
+        ShortcutInvite shortcutInvite = shortcutReceiver.Invite!;
+        using var shortcutHttp = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false });
+        async Task<HttpResponseMessage> ShortcutSend(string name, byte[] original, byte[]? payload = null, string? hash = null, bool authorize = true)
+        {
+            byte[] wire = payload ?? original;
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{server.TrimEnd('/')}/api/shortcut/{shortcutInvite.Room}/upload");
+            request.Content = new ByteArrayContent(wire);
+            if (authorize) request.Headers.Authorization = new("Bearer", shortcutInvite.Token);
+            request.Headers.Add("X-PocketBridge-Name64", Convert.ToBase64String(Encoding.UTF8.GetBytes(name)));
+            request.Headers.Add("X-PocketBridge-Original-Size", original.Length.ToString());
+            request.Headers.Add("X-PocketBridge-Payload-Size", wire.Length.ToString());
+            request.Headers.Add("X-PocketBridge-Compression", payload is null ? "none" : "zip");
+            request.Headers.Add("X-PocketBridge-SHA256", hash ?? Convert.ToHexStringLower(SHA256.HashData(original)));
+            return await shortcutHttp.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+        }
+        await Check("Shortcut relay: upload requires its one-time sender token", async () =>
+        {
+            using var response = await ShortcutSend("secret.txt", [1], authorize: false);
+            Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        });
+        await Check("Shortcut relay: raw file streams to verified Windows storage", async () =>
+        {
+            byte[] original = RandomNumberGenerator.GetBytes(1_200_000);
+            using var response = await ShortcutSend("단축어 영상.bin", original);
+            response.EnsureSuccessStatusCode();
+            Equal(Convert.ToHexString(original), Convert.ToHexString(await File.ReadAllBytesAsync(Path.Combine(shortcutFolder, "단축어 영상.bin"), ct)));
+        });
+        await Check("Shortcut relay: smart ZIP document restores its original", async () =>
+        {
+            byte[] original = Encoding.UTF8.GetBytes(string.Concat(Enumerable.Repeat("shortcut,document,압축\n", 20000)));
+            using var response = await ShortcutSend("문서.csv", original, Zip(original));
+            response.EnsureSuccessStatusCode();
+            Equal(Convert.ToHexString(original), Convert.ToHexString(await File.ReadAllBytesAsync(Path.Combine(shortcutFolder, "문서.csv"), ct)));
+        });
+        await Check("Shortcut relay: wrong iPhone SHA-256 never commits", async () =>
+        {
+            using var response = await ShortcutSend("damaged.bin", [1, 2, 3], hash: new string('0', 64));
+            Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+            Equal(false, File.Exists(Path.Combine(shortcutFolder, "damaged.bin")));
+        });
     }
     Console.WriteLine($"All {passed} checks passed.");
 }

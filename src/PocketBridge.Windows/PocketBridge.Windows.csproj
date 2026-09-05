@@ -7,7 +7,7 @@
     <RootNamespace>PocketBridge.Windows</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Version>0.1.0</Version>
-    <Description>Native encrypted iPhone-to-Windows file receiver</Description>
+    <Description>Native Windows receiver for iPhone Shortcuts file transfer</Description>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../PocketBridge.Core/PocketBridge.Core.csproj" />

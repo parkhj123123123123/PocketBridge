@@ -33,7 +33,7 @@
           <Border BorderBrush="#354159" BorderThickness="1" CornerRadius="12" Padding="16,17" Margin="0,0,0,22">
             <StackPanel>
               <TextBlock Text="iPhone → Windows" Foreground="#E1E7F3" FontWeight="SemiBold" FontSize="13" />
-              <TextBlock Text="서로 다른 네트워크에서도&#x0a;앱으로 가볍게 연결하세요." Foreground="#91A0B9" FontSize="11" LineHeight="20" Margin="0,8,0,0" />
+              <TextBlock Text="서로 다른 네트워크에서도&#x0a;단축어로 가볍게 연결하세요." Foreground="#91A0B9" FontSize="11" LineHeight="20" Margin="0,8,0,0" />
             </StackPanel>
           </Border>
           <TextBlock Text="OPEN SOURCE  /  v0.1" Foreground="#7889A4" FontSize="10" Margin="5,0,0,0" />
@@ -87,7 +87,7 @@
                 <Button x:Name="DisconnectButton" Grid.Column="1" Content="종료" Click="Disconnect_Click" Visibility="Collapsed" Margin="8,0,0,0" Padding="14,10" />
               </Grid>
               <StackPanel Grid.Row="5" Margin="0,14,0,0">
-                <TextBlock x:Name="ConnectionMessage" Text="처음이라면 시작 가이드에서 앱과 서버를 준비하세요." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="10" LineHeight="17" />
+                <TextBlock x:Name="ConnectionMessage" Text="처음이라면 시작 가이드에서 단축어와 서버를 준비하세요." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="10" LineHeight="17" />
                 <ProgressBar x:Name="TransferProgress" Height="5" Margin="0,10,0,0" Minimum="0" Maximum="100" Foreground="#7366EE" Background="#EDEBF8" BorderThickness="0" Visibility="Collapsed" />
                 <TextBlock x:Name="ProgressText" Text="" Foreground="#7162DB" FontSize="10" Margin="0,5,0,0" Visibility="Collapsed" />
               </StackPanel>
@@ -112,16 +112,16 @@
                     <Border Background="#7163E8" Width="28" Height="28" CornerRadius="14" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-20,20,0,0"><TextBlock Text="&#xE72A;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
                   </Grid>
                   <TextBlock Text="파일이 건너올 다리를 만드세요" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Center" />
-                  <TextBlock Text="왼쪽에서 연결 QR을 만들면&#x0a;iPhone 앱으로 스캔할 수 있어요." Foreground="{StaticResource Muted}" TextAlignment="Center" FontSize="11" LineHeight="19" Margin="0,7,0,0" />
+                  <TextBlock Text="왼쪽에서 연결 QR을 만들면&#x0a;iPhone 단축어에서 스캔할 수 있어요." Foreground="{StaticResource Muted}" TextAlignment="Center" FontSize="11" LineHeight="19" Margin="0,7,0,0" />
                 </StackPanel>
                 <StackPanel x:Name="QrPanel" Visibility="Collapsed" VerticalAlignment="Center">
-                  <Image x:Name="QrImage" Width="212" Height="212" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" AutomationProperties.Name="iPhone 앱에서 스캔할 연결 QR 코드" />
-                  <TextBlock x:Name="QrCaption" Text="iPhone의 PocketBridge 앱에서 스캔하세요." Foreground="{StaticResource Muted}" TextAlignment="Center" FontSize="10" TextWrapping="Wrap" Margin="0,5,0,0" />
+                  <Image x:Name="QrImage" Width="212" Height="212" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" AutomationProperties.Name="iPhone 단축어에서 스캔할 연결 QR 코드" />
+                  <TextBlock x:Name="QrCaption" Text="iPhone의 PocketBridge 단축어에서 스캔하세요." Foreground="{StaticResource Muted}" TextAlignment="Center" FontSize="10" TextWrapping="Wrap" Margin="0,5,0,0" />
                 </StackPanel>
                 <StackPanel x:Name="ConnectedPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center">
                   <Border Width="76" Height="76" CornerRadius="38" Background="#EAF7F1" Margin="0,0,0,17"><TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Foreground="#42A281" FontSize="29" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
                   <TextBlock Text="iPhone과 연결되었어요" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                  <TextBlock Text="iPhone 앱에서 파일을 더 보내세요.&#x0a;연결을 마치려면 종료를 누르세요." FontSize="11" Foreground="{StaticResource Muted}" TextAlignment="Center" LineHeight="20" Margin="0,8,0,0" />
+                  <TextBlock Text="공유 시트에서 파일을 더 보내세요.&#x0a;연결을 마치려면 종료를 누르세요." FontSize="11" Foreground="{StaticResource Muted}" TextAlignment="Center" LineHeight="20" Margin="0,8,0,0" />
                 </StackPanel>
               </Grid>
               <Grid Grid.Row="2">
@@ -154,7 +154,7 @@
           </Grid>
         </Border>
         <Grid Grid.Row="5" Margin="1,15,1,0">
-          <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" Foreground="#8794AC" FontSize="11" Margin="0,2,6,0" /><TextBlock Text="종단 간 암호화" Foreground="#7F8BA1" FontSize="10" /><TextBlock Text="  ·  압축 가능한 문서는 자동 최적화" Foreground="#97A1B2" FontSize="10" /></StackPanel>
+          <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" Foreground="#8794AC" FontSize="11" Margin="0,2,6,0" /><TextBlock Text="HTTPS 전송" Foreground="#7F8BA1" FontSize="10" /><TextBlock Text="  ·  SHA-256 파일 검증" Foreground="#97A1B2" FontSize="10" /></StackPanel>
           <TextBlock Text="원본은 iPhone에 그대로" Foreground="#97A1B2" FontSize="10" HorizontalAlignment="Right" />
         </Grid>
       </Grid>
