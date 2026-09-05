@@ -109,7 +109,7 @@ public partial class MainWindow : Window
             if (!client.Completion.IsCompleted && client.Invite is { } invite)
             {
                 using var generator = new QRCodeGenerator();
-                using var data = generator.CreateQrCode(invite.ToJson(), QRCodeGenerator.ECCLevel.M);
+                using var data = generator.CreateQrCode(invite.ToWebLink(), QRCodeGenerator.ECCLevel.M);
                 using var png = new PngByteQRCode(data);
                 using var stream = new MemoryStream(png.GetGraphic(8));
                 var image = new BitmapImage();
@@ -119,7 +119,7 @@ public partial class MainWindow : Window
                 image.EndInit();
                 image.Freeze();
                 QrImage.Source = image;
-                QrCaption.Text = $"{new Uri(invite.Server).Authority} · 10분 내 스캔\n단축어에서 QR을 스캔하세요.";
+                QrCaption.Text = $"{new Uri(invite.Server).Authority} · 5시간 유효\niPhone 카메라로 QR을 스캔하세요.";
                 QrPlaceholder.Visibility = Visibility.Collapsed;
                 QrPanel.Visibility = Visibility.Visible;
                 CopyInviteButton.IsEnabled = true;

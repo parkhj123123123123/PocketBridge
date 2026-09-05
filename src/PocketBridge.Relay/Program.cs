@@ -1,4 +1,5 @@
 using System.Net.WebSockets;
+using System.Security.Cryptography;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Http.Features;
 using PocketBridge.Core;
@@ -118,6 +119,42 @@ app.MapPost("/api/shortcut/{roomId}/upload", async (HttpContext context, string 
     {
         registry.Remove(room);
         return Results.Empty;
+    }
+});
+
+app.MapGet("/p/{roomId}", (HttpContext context, string roomId, string? token, RoomRegistry registry) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    if (token is null || registry.AuthenticateShortcutUpload(roomId, token) is null) return Results.NotFound();
+    string action = $"/p/{Uri.EscapeDataString(roomId)}/upload?token={Uri.EscapeDataString(token)}";
+    return Results.Content($$"""<!doctype html><html lang="ko"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PocketBridge</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f7fb;color:#192336;margin:0;padding:28px}main{max-width:460px;margin:auto;background:white;border-radius:20px;padding:28px;box-shadow:0 12px 36px #1b27401a}h1{margin:0 0 9px}p{color:#61708a;line-height:1.6}input,button{width:100%;box-sizing:border-box;padding:14px;border-radius:10px;font-size:16px;margin-top:12px}input{border:1px solid #d7ddea}button{border:0;background:#6857e8;color:white;font-weight:700}small{display:block;margin-top:16px;color:#8490a5}</style><main><h1>PocketBridge</h1><p>이 iPhone에서 보낼 사진, 동영상 또는 파일을 하나 선택하세요. 파일은 Windows PC에 저장됩니다.</p><form method="post" enctype="multipart/form-data" action="{{action}}"><input name="file" type="file" required><button type="submit">Windows로 보내기</button></form><small>이 링크는 QR을 만든 뒤 5시간 동안만 유효합니다.</small></main></html>""", "text/html; charset=utf-8");
+});
+
+app.MapPost("/p/{roomId}/upload", async (HttpContext context, string roomId, string? token, RoomRegistry registry) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    ShortcutRoom? room = token is null ? null : registry.AuthenticateShortcutUpload(roomId, token);
+    if (room is null) return Results.NotFound();
+    var sizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+    if (sizeFeature is { IsReadOnly: false }) sizeFeature.MaxRequestBodySize = Wire.MaxFileSize;
+    var form = await context.Request.ReadFormAsync(context.RequestAborted);
+    if (form.Files.Count != 1) return Results.BadRequest("파일을 하나만 선택해 전송하세요.");
+    IFormFile file = form.Files[0];
+    if (file.Length > Wire.MaxFileSize) return Results.BadRequest("파일이 너무 큽니다.");
+    await using Stream body = file.OpenReadStream();
+    string sha256 = Convert.ToHexStringLower(await SHA256.HashDataAsync(body, context.RequestAborted));
+    if (!body.CanSeek) return Results.Problem("파일을 다시 읽을 수 없습니다.", statusCode: 500);
+    body.Position = 0;
+    var metadata = new ShortcutUploadMetadata(file.FileName, file.Length, file.Length, "none", sha256);
+    try
+    {
+        TransferAck receipt = await room.UploadAsync(body, metadata, context.RequestAborted);
+        return Results.Content($"<meta name=\"viewport\" content=\"width=device-width\"><h2>전송 완료</h2><p>{System.Net.WebUtility.HtmlEncode(receipt.FileName ?? file.FileName)} 파일을 Windows에 저장했습니다.</p>", "text/html; charset=utf-8");
+    }
+    catch (ShortcutUploadException error)
+    {
+        if (error.StatusCode >= 422) registry.Remove(room);
+        return Results.Problem(error.Message, statusCode: error.StatusCode);
     }
 });
 

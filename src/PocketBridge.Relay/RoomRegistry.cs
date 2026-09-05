@@ -35,7 +35,7 @@ public sealed class RoomRegistry(IOptions<RelayOptions> options) : BackgroundSer
             var id = Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(16));
             var receiver = CreateToken();
             var sender = CreateToken();
-            var expiration = DateTimeOffset.UtcNow.AddMinutes(settings.WaitingMinutes);
+            var expiration = DateTimeOffset.UtcNow.AddHours(5);
             shortcutRooms.Add(id, new ShortcutRoom(id, Hash(receiver), Hash(sender), expiration, TimeSpan.FromHours(settings.ActiveHours)));
             return new CreatedRoom(id, receiver, sender, expiration);
         }

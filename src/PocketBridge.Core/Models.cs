@@ -9,6 +9,7 @@ public sealed record PairingInvite(int Version, string Server, string Room, stri
 public sealed record ShortcutInvite(int Version, string Server, string Room, string Token)
 {
     public string ToJson() => JsonSerializer.Serialize(this, Wire.Json);
+    public string ToWebLink() => $"{Server.TrimEnd('/')}/p/{Room}?token={Uri.EscapeDataString(Token)}";
     public static ShortcutInvite Parse(string json) => JsonSerializer.Deserialize<ShortcutInvite>(json, Wire.Json) ?? throw new InvalidDataException("단축어 연결 정보를 읽을 수 없습니다.");
 }
 public sealed record RelaySession(string RoomId, string ReceiverToken, string SenderToken, DateTimeOffset ExpiresAt);
