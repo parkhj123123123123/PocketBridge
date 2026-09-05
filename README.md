@@ -74,5 +74,6 @@ dotnet run --project tests/PocketBridge.Tests -c Release -- --relay http://127.0
 - `docs/shortcut.md`: iPhone 단축어 만들기
 - `docs/relay.md`: 서버 배포와 보안 경계
 - `tests`: 단위·통합·릴레이 스모크 검사
+- `cloudflare/pocketbridge-worker`: PIN 방·파일 목록용 Cloudflare Worker와 R2 저장소 구성
 
 기여 방법은 [CONTRIBUTING.md](CONTRIBUTING.md), 보안 보고는 [SECURITY.md](SECURITY.md)를 참고하세요.

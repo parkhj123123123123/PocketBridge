@@ -1,0 +1,7 @@
+{
+  "name": "pocketbridge-rooms",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-05",
+  "d1_databases": [{ "binding": "ROOMS", "database_name": "pocketbridge-rooms", "database_id": "424c1f2f-1b7d-42fd-b60a-05bf3c14d099" }],
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "pocketbridge-files-parkhj123123123123"}]
+}

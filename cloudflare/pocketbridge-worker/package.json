@@ -1,0 +1,6 @@
+{
+  "name": "pocketbridge-rooms",
+  "private": true,
+  "scripts": { "deploy": "wrangler deploy" },
+  "devDependencies": { "wrangler": "^4.129.0" }
+}
