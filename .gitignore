@@ -13,3 +13,4 @@ ios/.build/
 artifacts/
 .DS_Store
 Thumbs.db
+.wrangler/
