@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PocketBridge.Core/PocketBridge.Core.csproj" />
+    <Project Path="src/PocketBridge.Relay/PocketBridge.Relay.csproj" />
+    <Project Path="src/PocketBridge.Windows/PocketBridge.Windows.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PocketBridge.Tests/PocketBridge.Tests.csproj" />
+    <Project Path="tests/RelaySmoke/RelaySmoke.csproj" />
+  </Folder>
+</Solution>

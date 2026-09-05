@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.pfx
+*.mobileprovision
+*.xcuserstate
+ios/PocketBridge.xcodeproj/
+ios/.build/
+artifacts/
+.DS_Store
+Thumbs.db
